@@ -29,7 +29,7 @@ try {
   // Commit succeeds, transport response is lost: UI must retain unsaved intent.
   let lost=false;await page.route(`**${path}/selection`,async route=>{if(route.request().method()==="PUT"&&!lost){lost=true;const r=await route.fetch();if(r.status()!==200)throw Error("Expected committed save");await route.abort("failed");}else await route.continue();});
   await page.locator(".photo-card").getByRole("button",{name:"Select",exact:true}).first().click();await page.getByRole("button",{name:"Save draft",exact:true}).click();await expect(page.getByRole("status").filter({hasText:/Save not acknowledged/})).toBeVisible();
-  await page.getByRole("button",{name:"Review choices",exact:true}).click();await expect(page.getByText("Save all changes before confirmation.",{exact:true})).toBeVisible();await expect(page.getByRole("button",{name:/Confirm/})).toHaveCount(0);
+  await page.getByRole("button",{name:"Review choices",exact:true}).click();await expect(page.getByText("Save all changes before confirmation.",{exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Confirm and lock selection",exact:true})).toBeDisabled();
   await page.getByRole("button",{name:"Review server draft",exact:true}).click();await page.getByRole("button",{name:"Use server draft",exact:true}).click();await expect(page.getByRole("status").filter({hasText:/^Saved$/})).toBeVisible();
   await page.getByRole("button",{name:"Back to photos",exact:true}).click();await page.unroute(`**${path}/selection`);
   await page.route(`**${path}/media/**`,route=>route.fulfill({status:503,contentType:"application/json",body:JSON.stringify({error:{code:"SOURCE_UNAVAILABLE"}})}));
@@ -38,7 +38,7 @@ try {
   await mkdir("test-results",{recursive:true});
   for(const width of [360,768,1440]){await page.setViewportSize({width,height:1000});if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error(`Gallery overflow at ${width}`);await page.screenshot({path:`test-results/gallery-${width}.png`,fullPage:true});}
   await page.getByLabel("Theme",{exact:true}).selectOption("dark");await page.screenshot({path:"test-results/gallery-dark.png",fullPage:true});
-  await page.getByLabel("Language",{exact:true}).selectOption("id");await expect(page.getByRole("heading",{name:"Galeri foto Anda",exact:true})).toBeVisible();await page.getByRole("button",{name:"Tinjau pilihan",exact:true}).click();await expect(page.getByText("Konfirmasi hadir di EPIC-05. Pilihan belum dikunci.",{exact:true})).toBeVisible();
+  await page.getByLabel("Language",{exact:true}).selectOption("id");await expect(page.getByRole("heading",{name:"Galeri foto Anda",exact:true})).toBeVisible();await page.getByRole("button",{name:"Tinjau pilihan",exact:true}).click();await expect(page.getByRole("button",{name:"Konfirmasi dan kunci pilihan",exact:true})).toBeVisible();
   await page.reload();await expect(page.getByRole("heading",{name:"Galeri foto Anda",exact:true})).toBeVisible();await expect(page.locator(".gallery-dark")).toHaveCount(1);
   await page.getByRole("button",{name:"Tinjau pilihan",exact:true}).click();await page.getByLabel("Catatan foto (maksimum 500 karakter)",{exact:true}).first().fill("x".repeat(501));await page.getByRole("button",{name:"Simpan draf",exact:true}).click();await expect(page.locator(".gallery").getByRole("alert")).toContainText("Periksa kuota maksimum");await expect(page.getByRole("status").filter({hasText:/Penyimpanan belum diakui/})).toBeVisible();
   // Grant revocation is observed on the next actual request, with no owner bypass.

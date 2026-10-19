@@ -58,6 +58,12 @@ Project creation snapshots the saved defaults plus their version/revision; later
 
 The additive `007_gallery.sql` stores a bounded rolling access-attempt counter per scoped project/workflow. Gallery issuance stores only random-grant hashes in existing `gallery_sessions`, caps expiry at 12 hours/workflow deadline and rechecks access versions after slow password verification outside transactions. Selection uses the existing scoped tables, not another per-client draft. Full replacement validates current grant, expected revision, photo scope/availability/quota/notes before deleting or inserting; a failure rolls back items and revision together. All client reads/writes lock studio → project (and selection when relevant), matching owner edits and inventory publication.
 
+## Local EPIC-05 confirmation storage
+
+`008_results.sql` adds scoped `selection_confirmations` with a unique project/revision, exact JSON item snapshot and database time, plus an UPDATE/DELETE rejection trigger. `selection_sets.last_confirmation_id` has a composite scoped FK. Existing photo/item identities are reused. Confirm locks studio → project → set, validates the acknowledged revision/quota/available items, inserts a snapshot and increments/locks the set in one transaction. Reopen retains choices, advances the set revision and writes an audit reason atomically; later confirmations leave prior snapshots unchanged.
+
+`selection_requests` binds project/studio/operation/key to an owner user ID or hashed main-grant session and a keyed canonical request fingerprint. Responses and 24-hour expiry commit with the business mutation; retained key uniqueness rejects expired reuse. Current authorization precedes replay; matching replay can recover an acknowledged result after entitlement/state changes. No raw grant or credentials are stored. No original-media storage is added. The migration was applied repeatably in isolated tests and managed local storage with existing rows retained; see [evidence](EPIC-05-EVIDENCE.md).
+
 ## Migration / release policy
 
 - Prefer `ADD nullable → backfill → verify → enforce NOT NULL/unique` for expansions. Production changes need reviewed migration and backup/compatibility plan, not destructive `down/reset`.

@@ -1,6 +1,6 @@
 # Implementation backlog — SIX epics only
 
-**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03 is `Blocked` on remaining provider edge-case/key-policy and hosted-media proof; EPIC-04 is `In progress` with local gallery/selection implementation and physical-phone verification outstanding; EPIC-05–06 remain `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
+**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03 is `Blocked` on remaining provider edge-case/key-policy and hosted-media proof; EPIC-04 is `In progress` with local gallery/selection implementation and physical-phone verification outstanding; EPIC-05 is `Blocked` after local implementation, pending D-02/D-03 download proof; EPIC-06 remains `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
 
 ## At a glance
 
@@ -92,6 +92,8 @@
 **Evidence:** browser flows with actual API/DB; boundary and denial tests with separate tenant and grant; real phone for final accessibility/device claims. Synthetic Drive metadata may power gallery until EPIC-03 live integration, but final combined E2E is required in EPIC-06.
 
 ## EPIC-05 — Confirmation, Results & Downloads
+
+**Status: Blocked.** Local atomic confirmation/idempotency, immutable history, owner results/CSV/reopen and separately authorized bounded original delivery are implemented and verified. See [EPIC-05 evidence](EPIC-05-EVIDENCE.md). A05 still requires real-provider edge cases and hosted original-transfer proof under D-02/D-03; synthetic sources cannot close this gate.
 
 **Outcome:** client locks an exact selection, owner gets a reliable immutable result and can intentionally reopen; client original download works only under its separate grant.
 

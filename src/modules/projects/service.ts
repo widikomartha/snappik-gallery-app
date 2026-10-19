@@ -7,6 +7,7 @@ import { json, Problem } from "../http";
 import { entitlement } from "../entitlement";
 import { canonical, projectCreate, projectPatch, revisionInput } from "./validation";
 import { inventoryRoutes } from "../inventory/routes";
+import { resultRoutes } from "../gallery/results";
 
 type Studio = { id: string; user_id: string };
 type Workflow = { kind: "main" | "download"; enabled: boolean; quota: number | null; expires_at: string | Date | null; password_hash: string | null; access_version: number };
@@ -44,6 +45,8 @@ const pageQuery = z.object({
 
 export async function projectRoutes(client: PoolClient, studio: Studio, request: Request, value: unknown): Promise<Response> {
   const url = new URL(request.url); const path = url.pathname.replace(/^\/api\/v1\//, "");
+  const resultResponse = await resultRoutes(client,studio,request,value);
+  if (resultResponse) return resultResponse;
   const inventoryResponse = await inventoryRoutes(client,studio,request,value);
   if (inventoryResponse) return inventoryResponse;
   if (path === "dashboard" && request.method === "GET") {

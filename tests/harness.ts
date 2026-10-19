@@ -11,7 +11,7 @@ export async function freePort() {
   const server = createServer(); server.listen(0, "127.0.0.1"); await once(server, "listening");
   const port = (server.address() as { port: number }).port; await new Promise<void>(resolve => server.close(() => resolve())); return port;
 }
-export async function harness(options:{mailKey?:string;inventoryAdapter?:"disabled"|"google_public"}={}) {
+export async function harness(options:{mailKey?:string;inventoryAdapter?:"disabled"|"google_public"|"synthetic"}={}) {
   const password = randomBytes(32).toString("hex"); const port = await freePort(); const webPort = await freePort();
   const base = `http://127.0.0.1:${webPort}`;
   const instance = await postgres(`.local/tests/${randomUUID()}`, port, password);

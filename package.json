@@ -27,7 +27,9 @@
     "test:inventory": "tsx --test --test-concurrency=1 tests/inventory.test.ts tests/public-drive.test.ts tests/drive-config.test.ts",
     "test:inventory:browser": "tsx scripts/test-inventory-browser.ts",
     "test:gallery": "tsx --test --test-concurrency=1 tests/gallery.test.ts",
-    "test:gallery:browser": "tsx scripts/test-gallery-browser.ts"
+    "test:gallery:browser": "tsx scripts/test-gallery-browser.ts",
+    "test:results": "tsx --test --test-concurrency=1 tests/results.test.ts",
+    "test:results:browser": "tsx scripts/test-results-browser.ts"
   },
   "dependencies": {
     "@better-auth/core": "1.7.11",

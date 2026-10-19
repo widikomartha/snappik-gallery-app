@@ -6,6 +6,8 @@ import { transaction } from "../../db/pool";
 import { body, failure, json, origin, Problem } from "../http";
 import { authorizedWorkflow } from "../projects/access";
 import { ownerPreview, type OwnerTransaction } from "../inventory/media";
+import { confirm, clientSnapshot } from "./results";
+import { originalDownload } from "./download";
 
 type Kind = "main" | "download";
 const unavailable = () => new Problem(404,"GALLERY_UNAVAILABLE","Gallery unavailable.");
@@ -31,21 +33,35 @@ async function granted(c:PoolClient,p:Record<string,any>,request:Request,kind:Ki
   const raw=request.headers.get("cookie")?.split(";").map(s=>s.trim()).find(s=>s.startsWith(`${cookieName(kind)}=`))?.slice(cookieName(kind).length+1);
   const g=raw&&/^[\w-]{43}$/.test(raw)?await authorizedWorkflow(c,digest(raw),kind):null;
   if(!g||g.project_id!==p.id||g.studio_id!==p.studio_id)throw new Problem(401,"GALLERY_GRANT_REQUIRED","Enter gallery access again.");
+  return digest(raw!);
 }
 async function selection(c:PoolClient,p:Record<string,any>) {
-  const s=(await c.query("SELECT state AS status,revision,saved_at FROM selection_sets WHERE studio_id=$1 AND project_id=$2 FOR UPDATE",[p.studio_id,p.id])).rows[0];
+  const s=(await c.query("SELECT state AS status,revision,saved_at,last_confirmation_id FROM selection_sets WHERE studio_id=$1 AND project_id=$2 FOR UPDATE",[p.studio_id,p.id])).rows[0];
   const w=await workflow(c,p,"main");
   const items=(await c.query(`SELECT i.photo_id,i.note,f.filename,f.folder_path,f.available FROM selection_items i JOIN project_photos f
     ON (f.studio_id,f.project_id,f.id)=(i.studio_id,i.project_id,i.photo_id) WHERE i.studio_id=$1 AND i.project_id=$2 ORDER BY i.photo_id`,[p.studio_id,p.id])).rows;
-  return {...s,quota:w.quota,notes_enabled:p.notes_enabled,items};
+  const snapshot=s.last_confirmation_id?(await c.query("SELECT id,revision,confirmed_at,items FROM selection_confirmations WHERE studio_id=$1 AND project_id=$2 AND id=$3",[p.studio_id,p.id,s.last_confirmation_id])).rows[0]:null;
+  const immutable=snapshot?clientSnapshot(snapshot):null;
+  return {...s,quota:w.quota,notes_enabled:p.notes_enabled,items:s.status==="confirmed"&&immutable?immutable.items.map(i=>({...i,available:true})):items,latest_confirmation:immutable};
 }
 const draft=z.object({expected_revision:z.number().int().positive(),items:z.array(z.object({photo_id:z.uuid(),note:z.string().refine(s=>[...s].length<=500&&!s.includes("\0")&&s.isWellFormed()).default("")}).strict()).max(500)}).strict();
 
 export async function galleryHandler(request:Request) {
   origin(request);
-  const url=new URL(request.url);const match=/^\/api\/v1\/g\/([\w-]{32})(?:\/(access|photos|selection|media\/[^/]+))?$/.exec(url.pathname);
+  const url=new URL(request.url);const match=/^\/api\/v1\/g\/([\w-]{32})(?:\/(access|photos|selection(?:\/confirm)?|media\/[^/]+|download\/[^/]+))?$/.exec(url.pathname);
   if(!match)throw unavailable();const token=match[1],action=match[2];
   const kind=parse(z.enum(["main","download"]),url.searchParams.get("workflow")??"main");
+  if(action?.startsWith("download/")&&request.method==="GET") {
+    if(url.search)throw new Problem(422,"INVALID_INPUT","Unexpected query.");
+    const asClient:OwnerTransaction=read=>transaction(async c=>{const p=await project(c,token);await granted(c,p,request,"download");return read(c,{id:p.studio_id,user_id:""});});
+    const id=await transaction(async c=>{const p=await project(c,token);await granted(c,p,request,"download");return p.id as string;});
+    return originalDownload(request,id,action.slice(9),asClient);
+  }
+  if(action==="selection/confirm"&&request.method==="POST") {
+    if(url.search)throw new Problem(422,"INVALID_INPUT","Unexpected query.");
+    const value=await body(request);
+    return transaction(async c=>{const p=await project(c,token),actor=await granted(c,p,request,"main");return json(await confirm(c,p,actor,request,value));});
+  }
   if(action==="access"&&request.method==="POST") {
     if(url.search)throw new Problem(422,"INVALID_INPUT","Unexpected query.");
     const input=parse(z.object({workflow:z.enum(["main","download"]),password:z.string().max(128).optional()}).strict(),await body(request));
