@@ -3,6 +3,8 @@ import { auth } from "./provider";
 import { authGuard } from "../../db/pool";
 import { withDeliveries } from "./mail";
 import { body, failure, origin, Problem } from "../http";
+import { recordOperatorMfa } from "../operations/mfa";
+import { assertOperational } from "../operations/recovery";
 
 const password = z.string().min(1).max(128);
 const email = z.string().email().max(254);
@@ -36,6 +38,7 @@ export async function authHandler(request: Request) {
     const guard = await authGuard().connect();
     try {
       await guard.query("SELECT pg_advisory_lock(71002)");
+      await assertOperational(guard);
       const before = path === "sign-out" ? await auth().api.getSession({ headers: request.headers, query: { disableCookieCache: true } }) : null;
       if (path === "sign-out") {
         if (before) await guard.query("DELETE FROM session WHERE id=$1", [before.session.id]);
@@ -45,6 +48,7 @@ export async function authHandler(request: Request) {
       const execute = async () => {
         const response = await withDeliveries(() => auth().handler(request));
         if (response.status >= 500) throw new Error("Auth storage unavailable");
+        if (path === "two-factor/verify-totp" && response.ok) await recordOperatorMfa(request,response);
         return response;
       };
       const response = path.startsWith("two-factor/") || path === "change-password"

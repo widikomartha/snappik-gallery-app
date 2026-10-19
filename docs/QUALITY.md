@@ -85,4 +85,6 @@ Local EPIC-05 transaction, HTTP and Chromium results are recorded in [EPIC-05 ev
 
 ## Documentation validator limitations
 
+Local EPIC-06 execution and release procedures are recorded in [EPIC-06 evidence](EPIC-06-EVIDENCE.md). Its PostgreSQL/HTTP tests cover actual TOTP proof, scoped permissions, replay/races, immutable audit/rollback, suspension/revocation and an encrypted DB/private-preview round trip into quarantined isolated storage. Browser checks cover the operator surface and lost replies. The pilot-capacity command seeds explicitly synthetic 10-studio/100-project/1000-photo/4-folder data and 50 active hashed grants, measures real HTTP reads/save/confirm/reopen and reports sample counts/p95/worker RSS/pools; it does not measure provider regeneration, hosted capacity or real-device behavior. CI configuration alone is not a hosted execution record.
+
 `docs/tools/validate-docs.ps1` checks Markdown links, fenced JSON, epic links and common mandatory docs. It **cannot** prove requirements are semantically consistent, API implementation matches docs, secrets are absent, backend behavior works or release readiness. Review those separately, especially after any change to source provider, schema, access rules or limits.

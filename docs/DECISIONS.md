@@ -16,6 +16,8 @@ These are explicitly **open** until a project owner approves the relevant choice
 
 ## Recording a closed decision
 
+**EPIC-06 implementation boundary — Still open, project owner:** local operator APIs/UI, separately permitted TOTP proof, diagnostics, encrypted logical backup/quarantined restore and synthetic pilot-load measurement proceed without external account actions. D-03 still needs the authorized staging target, operational owner, key custody/backup ACLs, current denial/deletion reconciliation storage, real monitoring delivery and rollback proof. D-04 still needs approved retention/purge and recovery reopening semantics; therefore only retention candidate counts are enabled and restored data cannot reopen. Existing D-01/D-02 and real-device gates remain open. Local implementation does not approve any gate or assign permissions to a real account. See [EPIC-06 evidence](EPIC-06-EVIDENCE.md).
+
 For each gate: specify `status: Approved/Rejected/Still open`, approver, approval date, exact tested configuration and version, evidence path/run, tradeoff, ongoing operational owner, and affected contracts/epics. Update only the impacted authoritative docs, not every file. A gate is not closed by a comparative blog post, a passing mock, or a local-only success.
 
 ## Adoption decisions (not provider gates)

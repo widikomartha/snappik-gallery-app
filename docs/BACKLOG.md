@@ -1,6 +1,6 @@
 # Implementation backlog — SIX epics only
 
-**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03 is `Blocked` on remaining provider edge-case/key-policy and hosted-media proof; EPIC-04 is `In progress` with local gallery/selection implementation and physical-phone verification outstanding; EPIC-05 is `Blocked` after local implementation, pending D-02/D-03 download proof; EPIC-06 remains `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
+**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03 is `Blocked` on remaining provider edge-case/key-policy and hosted-media proof; EPIC-04 is `In progress` with local gallery/selection implementation and physical-phone verification outstanding; EPIC-05 is `Blocked` after local implementation, pending D-02/D-03 download proof; EPIC-06 is `Blocked` after local operator/security/recovery/capacity implementation, pending the authorized pilot release gate. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
 
 ## At a glance
 
@@ -110,6 +110,8 @@
 **Evidence:** actual DB transaction/race tests; CSV fixture with duplicate name and formula string; real Drive source + streaming tests after D-02/03. Report outstanding provider verification rather than marking download fully done from mock output.
 
 ## EPIC-06 — Operations, Security & Pilot Release
+
+**Status: Blocked.** Separately authorized operator UI/API with fresh actual TOTP, audited/idempotent grants/suspend/reactivate, restricted diagnostics/metrics, encrypted local DB/private-preview backup and quarantined isolated restore, source packaging and measured synthetic pilot load are implemented. See [EPIC-06 evidence](EPIC-06-EVIDENCE.md). The single residual gate is authorized pilot release evidence: approved D-01..D-04, newer deletion/revocation reconciliation and retention/purge, real-device and hosted operation/rollback proof. No deployment or real operator assignment occurred.
 
 **Outcome:** the app is operable and ready for a controlled, authorized pilot, with documented restore/revocation and cross-principal denial evidence.
 

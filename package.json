@@ -29,7 +29,12 @@
     "test:gallery": "tsx --test --test-concurrency=1 tests/gallery.test.ts",
     "test:gallery:browser": "tsx scripts/test-gallery-browser.ts",
     "test:results": "tsx --test --test-concurrency=1 tests/results.test.ts",
-    "test:results:browser": "tsx scripts/test-results-browser.ts"
+    "test:results:browser": "tsx scripts/test-results-browser.ts",
+    "test:operations": "tsx --test --test-concurrency=1 tests/operations.test.ts",
+    "test:operations:browser": "tsx scripts/test-operations-browser.ts",
+    "test:pilot-load": "tsx scripts/test-pilot-load.ts",
+    "backup:local": "tsx --env-file=.env.local scripts/backup-local.ts",
+    "release:package": "tsx scripts/package-release.ts"
   },
   "dependencies": {
     "@better-auth/core": "1.7.11",

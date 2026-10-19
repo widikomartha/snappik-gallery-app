@@ -56,6 +56,8 @@ These rules govern **all implementations**, including background jobs and direct
 
 ## Explicit state invariants
 
+Local operator commands require a separate explicit permission and TOTP verification within five minutes in the current session, including on retries and diagnostics. Manual grants span at most 366 days with project limit 1–1000; grant/suspend/reactivate reasons are 10–1000 Unicode code points. Actions and immutable operator audit commit atomically under studio locking. Suspension permanently revokes previously issued gallery sessions; reactivation permits fresh access requests but does not revive those sessions. Retention is report-only pending D-04. An isolated restored database remains quarantined until a future approved reconciliation process re-applies newer deletion/revocation state; there is no automatic or HTTP release of quarantine.
+
 | Dimension | Values | Never infer from |
 |---|---|---|
 | Studio | setup_required / active / suspended | trial label alone |

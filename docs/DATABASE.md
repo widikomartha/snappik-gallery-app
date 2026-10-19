@@ -25,6 +25,8 @@
 
 ## Consistency constraints
 
+**Local EPIC-06 schema:** migration `009_operations.sql` adds independent `platform_roles` (provider user, permission, nullable studio scope; null-safe uniqueness), session-FK `operator_mfa_proofs`, durable per-user `operator_attempts`, append-only `operator_events` and actor/session/studio/operation/key-scoped `operator_requests` with body hash, response and 24-hour replay deadline. `entitlement_grants.operator_event_id` ties manual grants to the atomic operator audit. Audit reasons are 10–1000 Unicode code points and excluded from diagnostic DTOs. No role assignment endpoint exists. `worker_heartbeats` stores safe RSS/pool counters. Singleton `recovery_control` gates access after an offline restore; there is no application operation to release quarantine. Restore preserves immutable confirmations and exact private preview bytes, while discarding credentials/roles and invalidating old client grants/share URLs. Newer deletion/revocation replay and destructive retention remain unimplemented release gates; candidate counting does not fulfill purge acceptance.
+
 - Every dependent project/photo/selection/job FK preserves studio/project scope; use composite FKs or explicit scoped validation plus DB protections. Do not accept unqualified IDs in public repositories.
 - Confirmation snapshot is immutable even if project/photo metadata changes, project archives or the owner reopens. Historical selected photo rows cannot be silently cascade-deleted while required by history.
 - Notes are bounded by **Unicode code points** in application validation; PostgreSQL may add check constraints but never assume UTF-8 byte length equals characters.

@@ -33,7 +33,13 @@ export function makeAuth() {
     session: { expiresIn: 43200, updateAge: 3600, cookieCache: { enabled: false } },
     rateLimit: { enabled: true, storage: "database", window: 60, max: 60,
       customRules: { "/sign-in/email": { window: 60, max: 10 }, "/sign-up/email": { window: 60, max: 5 }, "/request-password-reset": { window: 60, max: 5 } } },
-    plugins: [twoFactor({ issuer: "Snappik Local", backupCodeOptions: { amount: 10 } })],
+    plugins: [twoFactor({ issuer: "Snappik Local", backupCodeOptions: { amount: 10 } }), {
+      id: "operator-proof",
+      schema: { operatorMfaProof: { modelName: "operator_mfa_proofs", fields: {
+        sessionId: { type: "string", required: true, fieldName: "session_id", unique: true },
+        verifiedAt: { type: "date", required: true, fieldName: "verified_at" },
+      } } },
+    }],
   });
 }
 let instance: ReturnType<typeof makeAuth> | undefined;

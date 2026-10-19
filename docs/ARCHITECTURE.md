@@ -63,6 +63,8 @@ Development on Windows uses local PostgreSQL and synthetic provider fixtures. Th
 
 ## Non-functional constraints
 
+Local operations reuse the existing provider session/transaction adapter and PostgreSQL studio lock boundary; a small provider plugin schema stores actual session-bound TOTP proof. Separate operator services own permission checks, audited actions and safe projections. Recovery guard checks are shared by owner/client/auth/readiness/worker entry points. The bounded logical-backup module includes private DB preview objects, verifies migration/table identity, restores only into empty isolated storage and leaves access quarantined. Source packages carry per-file hashes and migration identity; neither local packaging nor backup chooses a hosting, key-custody or processor policy. See [EPIC-06 evidence](EPIC-06-EVIDENCE.md) for measured local capacity and the pending staging/rollback/reconciliation gates.
+
 - No external provider calls while holding application transactions.
 - No reliance on user-supplied tenant IDs, provider URLs, role flags or names as authorization keys.
 - Preserve business state on lost response, refresh failure, worker restart and stale tabs.

@@ -9,7 +9,7 @@ export function failure(error: unknown, requestId = randomUUID()) {
   const p = error instanceof Problem ? error : new Problem(503, "TEMPORARILY_UNAVAILABLE", "Service unavailable. Retry safely.");
   // Never log exceptions, request paths, query strings or request bodies.
   if (!(error instanceof Problem)) console.error(JSON.stringify({ request_id: requestId, code: p.code }));
-  return Response.json({ error: { code: p.code, message: p.message, request_id: requestId, ...(p.revision === undefined ? {} : { current_revision: p.revision }) } }, { status: p.status, headers: { "Cache-Control": "no-store" } });
+  return Response.json({ error: { code: p.code, message: p.message, request_id: requestId, ...(p.revision === undefined ? {} : { current_revision: p.revision }) } }, { status: p.status, headers: { "Cache-Control": "no-store", ...(p.status===429?{"Retry-After":"60"}:{}) } });
 }
 export function origin(request: Request) {
   // Next constructs its internal Request URL from the listening interface.

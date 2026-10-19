@@ -8,6 +8,7 @@ import { authorizedWorkflow } from "../projects/access";
 import { ownerPreview, type OwnerTransaction } from "../inventory/media";
 import { confirm, clientSnapshot } from "./results";
 import { originalDownload } from "./download";
+import { assertOperational } from "../operations/recovery";
 
 type Kind = "main" | "download";
 const unavailable = () => new Problem(404,"GALLERY_UNAVAILABLE","Gallery unavailable.");
@@ -18,6 +19,7 @@ function parse<T>(schema:z.ZodType<T>,value:unknown):T {
 }
 // Studio -> project locks match owner edits, inventory publication and archive.
 async function project(c:PoolClient,token:string) {
+  await assertOperational(c,true);
   const ref=(await c.query("SELECT studio_id,id FROM projects WHERE public_token=$1",[token])).rows[0];
   if(!ref)throw unavailable();
   const studio=(await c.query("SELECT id,setup_status,suspended_at FROM studios WHERE id=$1 FOR UPDATE",[ref.studio_id])).rows[0];

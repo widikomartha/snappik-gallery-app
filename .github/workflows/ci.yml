@@ -22,9 +22,14 @@ jobs:
       - run: npm run test:db
       - run: npm run test:inventory
       - run: npm run test:gallery
+      - run: npm run test:results
+      - run: npm run test:operations
       - run: npx playwright install chromium
       - run: npm run test:browser
       - run: npm run test:projects:browser
       - run: npm run test:inventory:browser
       - run: npm run test:gallery:browser
+      - run: npm run test:results:browser
+      - run: npm run test:operations:browser
+      - run: npm run test:pilot-load
       - run: pwsh -NoProfile -File docs/tools/validate-docs.ps1
