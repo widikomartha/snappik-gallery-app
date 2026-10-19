@@ -54,6 +54,10 @@
 
 Project creation snapshots the saved defaults plus their version/revision; later studio defaults do not rewrite that snapshot or project settings. Workflow hashes use the existing Better Auth slow-password implementation and never enter DTOs. Request fingerprints use keyed HMAC over canonical validated input, so passwords are not persisted as plaintext or unkeyed fast hashes. Idempotency replay expires after 24 hours; retained key uniqueness rejects reuse after that window. Archive/rotation advance the project access version; restore retains the advanced version, original workflow deadlines and selection records. No purge, confirmation writer, gallery session issuance or provider inventory writer is delivered by this migration.
 
+## Local EPIC-04 gallery storage
+
+The additive `007_gallery.sql` stores a bounded rolling access-attempt counter per scoped project/workflow. Gallery issuance stores only random-grant hashes in existing `gallery_sessions`, caps expiry at 12 hours/workflow deadline and rechecks access versions after slow password verification outside transactions. Selection uses the existing scoped tables, not another per-client draft. Full replacement validates current grant, expected revision, photo scope/availability/quota/notes before deleting or inserting; a failure rolls back items and revision together. All client reads/writes lock studio → project (and selection when relevant), matching owner edits and inventory publication.
+
 ## Migration / release policy
 
 - Prefer `ADD nullable → backfill → verify → enforce NOT NULL/unique` for expansions. Production changes need reviewed migration and backup/compatibility plan, not destructive `down/reset`.

@@ -35,6 +35,7 @@ These rules govern **all implementations**, including background jobs and direct
 ## Shared selection and confirmation
 
 - A project has **one collaborative main selection set**, shared by all clients authorized for its main workflow. Explicitly explain this in the UI; it is not one draft per recipient.
+- Disabling notes blocks new or changed nonempty draft notes; unchanged saved notes may be retained or explicitly cleared. Removing their selected photo removes its current draft note.
 - Draft state: `not_started` (0 items) or `selecting` (>=1 item). Confirmation requires **at least one** and at most the configured quota. Only available, in-project IDs may be selected, each at most once. Notes belong to selected items only, plain text, up to **500 Unicode code points**; removing a selected item removes its *current draft* note.
 - Every save, note update, confirm, reopen and relevant project config edit verifies its own `expected_revision`, acquires locks in consistent **studio (when needed) → project → selection set** order, and increments the appropriate revision in one transaction. A stale revision returns **409**, never automatically overwrites newer data.
 - `PUT` selection submits the **complete intended draft**, not a merge patch. Only a successful server acknowledgement makes the UI label it `saved`. Failed or uncertain saves retain local unsaved intent visibly. On a conflict, fetch canonical state, show the change and require deliberate user reapplication; never auto-merge past a confirmation boundary.

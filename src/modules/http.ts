@@ -19,7 +19,7 @@ export function origin(request: Request) {
   const site = request.headers.get("sec-fetch-site");
   if (site === "cross-site") throw new Problem(403, "ORIGIN_DENIED", "Request origin is not allowed.");
 }
-export async function body(request: Request) {
+export async function body(request: Request, maximum = 16384) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new Problem(415, "INVALID_INPUT", "Use JSON.");
   const reader = request.body?.getReader();
   let size = 0;
@@ -28,7 +28,7 @@ export async function body(request: Request) {
     const { value, done } = await reader.read();
     if (done) break;
     size += value.length;
-    if (size > 16384) { await reader.cancel(); throw new Problem(413, "PAYLOAD_TOO_LARGE", "Request is too large."); }
+    if (size > maximum) { await reader.cancel(); throw new Problem(413, "PAYLOAD_TOO_LARGE", "Request is too large."); }
     chunks.push(value);
   }
   try { return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown; }

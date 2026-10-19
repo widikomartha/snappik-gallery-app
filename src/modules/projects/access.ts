@@ -1,6 +1,6 @@
 import type { PoolClient } from "pg";
 
-// Shared repository boundary for future client routes. Never authorize from URL possession.
+// Shared repository boundary for client routes. Never authorize from URL possession.
 // Call within the request transaction; callers must hold studio -> project locks for mutations.
 export async function authorizedWorkflow(client: PoolClient, tokenHash: string, workflow: "main" | "download") {
   return (await client.query(`SELECT p.id AS project_id,p.studio_id,w.kind FROM gallery_sessions g

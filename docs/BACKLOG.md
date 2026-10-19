@@ -1,6 +1,6 @@
 # Implementation backlog — SIX epics only
 
-**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03 is `Blocked` on remaining provider edge-case/key-policy and hosted-media proof after local implementation; EPIC-04–06 remain `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
+**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03 is `Blocked` on remaining provider edge-case/key-policy and hosted-media proof; EPIC-04 is `In progress` with local gallery/selection implementation and physical-phone verification outstanding; EPIC-05–06 remain `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
 
 ## At a glance
 
@@ -74,6 +74,8 @@
 **Evidence:** adapter contract fixtures **plus** provider test root and hosted media evidence for production. Do not treat a synthetic Drive adapter as acceptance of A05. When blocked on consent/provider config, complete offline processing and leave the epic `Blocked` or `In progress`, not `Done`.
 
 ## EPIC-04 — Client Gallery & Photo Selection
+
+**Status: In progress.** Independent client access, protected gallery/viewer, shared revisioned draft and explicit conflict recovery are implemented locally. See [EPIC-04 evidence](EPIC-04-EVIDENCE.md) for executed checks. Physical-phone touch/accessibility verification remains the single acceptance blocker; desktop Chromium emulation cannot prove it. Confirmation and original downloads remain EPIC-05.
 
 **Outcome:** an account-free client passes main access, browses a responsive gallery and persists an exact shared draft with notes and concurrency recovery.
 
