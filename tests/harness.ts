@@ -11,12 +11,12 @@ export async function freePort() {
   const server = createServer(); server.listen(0, "127.0.0.1"); await once(server, "listening");
   const port = (server.address() as { port: number }).port; await new Promise<void>(resolve => server.close(() => resolve())); return port;
 }
-export async function harness() {
+export async function harness(options:{mailKey?:string;inventoryAdapter?:"disabled"|"google_public"}={}) {
   const password = randomBytes(32).toString("hex"); const port = await freePort(); const webPort = await freePort();
   const base = `http://127.0.0.1:${webPort}`;
   const instance = await postgres(`.local/tests/${randomUUID()}`, port, password);
   const pool = new Pool({ connectionString: `postgresql://snappik:${password}@127.0.0.1:${port}/postgres`, max: 12, connectionTimeoutMillis: 3000 });
-  Object.assign(process.env, { APP_MODE: "local", APP_URL: base, DATABASE_URL: pool.options.connectionString, BETTER_AUTH_SECRET: randomBytes(48).toString("hex"), LOCAL_MAIL_KEY: randomBytes(32).toString("hex"), NEXT_TELEMETRY_DISABLED: "1" });
+  Object.assign(process.env, { APP_MODE: "local", APP_URL: base, DATABASE_URL: pool.options.connectionString, BETTER_AUTH_SECRET: randomBytes(48).toString("hex"), LOCAL_MAIL_KEY: options.mailKey??randomBytes(32).toString("hex"), INVENTORY_ADAPTER: options.inventoryAdapter??"disabled", NEXT_TELEMETRY_DISABLED: "1" });
   const child = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "--hostname", "127.0.0.1", "--port", String(webPort)], { env: process.env, windowsHide: true, stdio: "ignore" });
   try {
     for (let i = 0; i < 120; i++) {

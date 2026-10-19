@@ -5,6 +5,7 @@ import { body, json, origin, Problem } from "../http";
 import { initialDefaults, profile, settingsPatch, studioPatch } from "./validation";
 import { projectRoutes } from "../projects/service";
 import { entitlement } from "../entitlement";
+import { ownerPreview, type OwnerTransaction } from "../inventory/media";
 
 async function owner(client: PoolClient, subject: string) {
   return (await client.query(`SELECT u.id AS user_id,s.* FROM users u JOIN studio_members m ON m.user_id=u.id JOIN studios s ON s.id=m.studio_id WHERE u.auth_provider='better-auth-local' AND u.auth_subject=$1 FOR UPDATE OF s`, [subject])).rows[0];
@@ -24,6 +25,14 @@ export async function ownerHandler(request: Request) {
   const value = request.method === "GET" ? null : await body(request);
   const principal = await identity(request);
   try {
+    const media=/^projects\/([^/]+)\/media\/([^/]+)$/.exec(path);
+    if(media&&request.method==="GET"){
+      const asOwner:OwnerTransaction=read=>transaction(async client=>{
+        const session=await lockIdentity(client,principal);const studio=await owner(client,session.user.id);active(studio);
+        return read(client,studio);
+      });
+      return await ownerPreview(request,media[1],media[2],asOwner);
+    }
     return await transaction(async client => {
       const session = await lockIdentity(client, principal);
       let studio = await owner(client, session.user.id);

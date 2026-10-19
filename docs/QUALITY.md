@@ -79,6 +79,8 @@ Keep run logs outside `PROJECT_STATE.md` and link them from PR/issue/CI or a sin
 
 Current local EPIC-02 assertions and exact verification commands are recorded once in [EPIC-02 evidence](EPIC-02-EVIDENCE.md). Gallery revocation is verified through the actual shared PostgreSQL grant-policy repository with synthetic stored grants; public client access/issuance routes remain EPIC-04 work. Ready/failed inventory projections are explicitly seeded test data, never provider scan evidence.
 
+Local EPIC-03 assertions and commands are recorded in [EPIC-03 evidence](EPIC-03-EVIDENCE.md). Tests exercise actual fenced PostgreSQL publication, protected owner HTTP media and a real worker/Chromium journey using generated colors. Public-only protocol fixtures additionally cover missing parent metadata, current parent-list membership, encrypted allowlisted configuration, expiry and the second authorization after provider waits. Live checks are an explicit opt-in command with private configuration and aggregate-only reporting; they do not close resource-key-required/actual ACL revocation/hidden-child/key-policy or hosted-storage acceptance.
+
 ## Documentation validator limitations
 
 `docs/tools/validate-docs.ps1` checks Markdown links, fenced JSON, epic links and common mandatory docs. It **cannot** prove requirements are semantically consistent, API implementation matches docs, secrets are absent, backend behavior works or release readiness. Review those separately, especially after any change to source provider, schema, access rules or limits.

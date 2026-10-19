@@ -18,10 +18,14 @@
     "setup:local": "tsx scripts/setup-local.ts",
     "mail:local": "tsx --env-file=.env.local scripts/mail-local.ts",
     "worker": "tsx --env-file=.env.local src/worker/main.ts",
+    "drive:configure-local": "tsx scripts/configure-drive-local.ts",
+    "drive:verify-live": "tsx --env-file=.env.local scripts/verify-drive-live.ts",
     "test": "tsx --test tests/validation.test.ts",
     "test:db": "tsx --test --test-concurrency=1 tests/integration.test.ts tests/projects.test.ts",
     "test:browser": "tsx scripts/test-browser.ts",
-    "test:projects:browser": "tsx scripts/test-projects-browser.ts"
+    "test:projects:browser": "tsx scripts/test-projects-browser.ts",
+    "test:inventory": "tsx --test --test-concurrency=1 tests/inventory.test.ts tests/public-drive.test.ts tests/drive-config.test.ts",
+    "test:inventory:browser": "tsx scripts/test-inventory-browser.ts"
   },
   "dependencies": {
     "@better-auth/core": "1.7.11",
@@ -32,7 +36,8 @@
     "pg": "8.23.1",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "zod": "4.6.7"
+    "zod": "4.6.7",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

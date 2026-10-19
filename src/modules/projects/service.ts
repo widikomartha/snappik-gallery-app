@@ -6,6 +6,7 @@ import { config } from "../../config";
 import { json, Problem } from "../http";
 import { entitlement } from "../entitlement";
 import { canonical, projectCreate, projectPatch, revisionInput } from "./validation";
+import { inventoryRoutes } from "../inventory/routes";
 
 type Studio = { id: string; user_id: string };
 type Workflow = { kind: "main" | "download"; enabled: boolean; quota: number | null; expires_at: string | Date | null; password_hash: string | null; access_version: number };
@@ -30,7 +31,7 @@ async function detail(client: PoolClient, studio: Studio, id: string) {
     FROM projects p JOIN selection_sets s ON s.studio_id=p.studio_id AND s.project_id=p.id WHERE p.studio_id=$1 AND p.id=$2`, [studio.id,id])).rows[0];
   if (!p) throw missing();
   const { public_token, defaults_snapshot: snapshot, ...safe } = p;
-  return { ...safe, defaults_snapshot: snapshot, public_url: `/g/${public_token}`, source_validation: "pending_provider", workflows: (await workflows(client, studio, id)).map(({ password_hash, ...w }) => ({ ...w, password_set: !!password_hash })) };
+  return { ...safe, defaults_snapshot: snapshot, public_url: `/g/${public_token}`, source_validation: p.inventory_origin === "synthetic" ? "synthetic_fixture" : p.inventory_origin === "google_public" ? "public_provider" : "pending_provider", workflows: (await workflows(client, studio, id)).map(({ password_hash, ...w }) => ({ ...w, password_set: !!password_hash })) };
 }
 async function audit(client: PoolClient, studio: Studio, id: string, action: string) {
   await client.query("INSERT INTO audit_events(studio_id,actor_id,project_id,action,outcome) VALUES($1,$2,$3,$4,'success')", [studio.id,studio.user_id,id,action]);
@@ -43,6 +44,8 @@ const pageQuery = z.object({
 
 export async function projectRoutes(client: PoolClient, studio: Studio, request: Request, value: unknown): Promise<Response> {
   const url = new URL(request.url); const path = url.pathname.replace(/^\/api\/v1\//, "");
+  const inventoryResponse = await inventoryRoutes(client,studio,request,value);
+  if (inventoryResponse) return inventoryResponse;
   if (path === "dashboard" && request.method === "GET") {
     const counts = (await client.query(`SELECT count(*)::int AS total,
       count(*) FILTER(WHERE p.archived_at IS NULL)::int AS active,
@@ -63,7 +66,7 @@ export async function projectRoutes(client: PoolClient, studio: Studio, request:
   }
   if (path.startsWith("jobs/") && request.method === "GET") {
     const id = path.slice(5); if (!z.uuid().safeParse(id).success) throw missing();
-    const job = (await client.query("SELECT id,project_id,type,status,attempt_count,failure_code,created_at FROM jobs WHERE studio_id=$1 AND id=$2", [studio.id,id])).rows[0];
+    const job = (await client.query("SELECT id,project_id,type,status,attempt_count,failure_code,summary,available_at,completed_at,created_at FROM jobs WHERE studio_id=$1 AND id=$2", [studio.id,id])).rows[0];
     if (!job) throw missing(); return json(job);
   }
   if (path === "projects" && request.method === "GET") {
@@ -121,7 +124,7 @@ export async function projectRoutes(client: PoolClient, studio: Studio, request:
   const input = action ? parse(revisionInput,value) : parse(projectPatch,value);
   if (p.revision!==input.expected_revision) throw new Problem(409,"REVISION_CONFLICT","Project changed. Reload before saving.",p.revision);
   if (action==="archive") {
-    if (!p.archived_at) await client.query("UPDATE projects SET archived_at=clock_timestamp(),access_version=access_version+1,revision=revision+1,updated_at=clock_timestamp() WHERE studio_id=$1 AND id=$2",[studio.id,id]);
+    if (!p.archived_at) await client.query("UPDATE projects SET archived_at=clock_timestamp(),access_version=access_version+1,source_revision=source_revision+1,revision=revision+1,updated_at=clock_timestamp() WHERE studio_id=$1 AND id=$2",[studio.id,id]);
   } else if (action==="restore") {
     if (!p.archived_at) throw new Problem(409,"PROJECT_NOT_ARCHIVED","Project is already active.");
     const within = (await client.query("SELECT archived_at+interval '30 days'>clock_timestamp() AS allowed FROM projects WHERE studio_id=$1 AND id=$2",[studio.id,id])).rows[0].allowed;
@@ -156,7 +159,7 @@ export async function projectRoutes(client: PoolClient, studio: Studio, request:
       detect_subfolders=COALESCE($8,detect_subfolders),notes_enabled=COALESCE($9,notes_enabled),layout=COALESCE($10,layout),
       revision=revision+1,updated_at=clock_timestamp() WHERE studio_id=$1 AND id=$2`,[studio.id,id,edit.client_label,edit.client_phone!==undefined,edit.client_phone,edit.admin_phone!==undefined,edit.admin_phone,edit.detect_subfolders,edit.notes_enabled,edit.layout]);
     if (edit.detect_subfolders!==undefined && edit.detect_subfolders!==p.detect_subfolders) {
-      await client.query("UPDATE projects SET inventory_status='pending' WHERE studio_id=$1 AND id=$2",[studio.id,id]);
+      await client.query("UPDATE projects SET inventory_status='pending',source_revision=source_revision+1 WHERE studio_id=$1 AND id=$2",[studio.id,id]);
       await client.query("INSERT INTO jobs(studio_id,project_id,type,dedupe_key) VALUES($1,$2,'inventory',$3)",[studio.id,id,`config:${p.revision+1}`]);
     }
   }

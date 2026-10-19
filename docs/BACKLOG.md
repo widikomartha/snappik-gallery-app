@@ -1,6 +1,6 @@
 # Implementation backlog — SIX epics only
 
-**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03–06 remain `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
+**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03 is `Blocked` on remaining provider edge-case/key-policy and hosted-media proof after local implementation; EPIC-04–06 remain `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
 
 ## At a glance
 
@@ -56,6 +56,8 @@
 **Evidence:** API/browser journey, actual PostgreSQL idempotency/quota races, grant and archive tests, fresh+stale revision checks. Live Drive indexing is not needed to complete **project lifecycle** assertions; use an explicit pending job until EPIC-03 integration.
 
 ## EPIC-03 — Google Drive & Media Processing
+
+**Status: Blocked.** Local bounded scans, fenced worker/retries/cancellation, atomic generations, protected previews and owner inventory controls are verified. The owner selected public-only access, supplied an approved public root/key and approved local preview caching on 20 October 2026. Local public-source activation is allowlisted with encrypted credentials, current provider membership/version checks, repeated owner authorization and seven-day cache expiry. A real scan published all 100 visible photos with 100 ready previews; authenticated HTTP denial/expiry cases and real pagination passed. A05 still requires key-required/actual ACL revocation/limited-child and key-policy evidence (D-02), plus hosted-media evidence (D-03). See [EPIC-03 evidence](EPIC-03-EVIDENCE.md).
 
 **Outcome:** a valid project can sync an approved Drive folder and show safe, accurate, permission-checked previews without losing the previous complete inventory on failure.
 

@@ -1,0 +1,53 @@
+import { chromium, expect } from "@playwright/test";
+import { spawn, type ChildProcess } from "node:child_process";
+import { once } from "node:events";
+import { randomUUID } from "node:crypto";
+import { mkdir } from "node:fs/promises";
+import { harness, BrowserSession, fixturePassword } from "../tests/harness";
+
+const h=await harness();await h.migrate();
+const browser=await chromium.launch({headless:true});const context=await browser.newContext({viewport:{width:1440,height:1000}});const page=await context.newPage();
+page.setDefaultTimeout(15000);const errors:string[]=[];page.on("pageerror",()=>errors.push("Browser runtime error"));let worker:ChildProcess|undefined;
+try{
+  const b=new BrowserSession(h.base);const email=`inventory-browser-${randomUUID()}@example.test`;const password=fixturePassword();
+  if(!(await b.request("/api/auth/sign-up/email","POST",{name:"Synthetic media owner",email,password})).ok)throw Error("Registration failed");
+  await b.request(await h.mail(email,"verification"));await b.request("/api/auth/sign-in/email","POST",{email,password});
+  if((await b.request("/api/v1/onboarding","POST",{name:"Media studio",slug:`media-${randomUUID()}`,locale:"en",timezone:"Asia/Makassar"})).status!==201)throw Error("Setup failed");
+  const create=await b.request("/api/v1/projects","POST",{client_label:"Synthetic media preview",drive_folder_id:"synthetic-folder-00001"},{"Idempotency-Key":randomUUID()});if(create.status!==201)throw Error("Create failed");const p=(await create.json()).data;
+  await context.addCookies([...b.cookies].map(([name,value])=>({name,value,url:h.base,httpOnly:true,sameSite:"Lax" as const})));
+  await page.goto(`${h.base}/app/projects/${p.id}`);
+  const panel=page.getByRole("region",{name:"Photo inventory",exact:true});
+  await expect(panel.getByText("No published photos yet.")).toBeVisible();await expect(panel.getByRole("button",{name:"Cancel scan",exact:true})).toBeVisible();
+  worker=spawn(process.execPath,["--import","tsx","src/worker/main.ts"],{env:{...process.env,INVENTORY_ADAPTER:"synthetic"},windowsHide:true,stdio:"ignore"});
+  await expect.poll(async()=>(await h.pool.query("SELECT inventory_generation FROM projects WHERE id=$1",[p.id])).rows[0].inventory_generation,{timeout:20000}).toBe(1);
+  worker.kill();await once(worker,"exit");worker=undefined;
+  await page.getByRole("button",{name:"Refresh",exact:true}).click();
+  await expect(panel.getByText("Synthetic fixture — generated colors only. Google Drive has not been verified.")).toBeVisible();
+  await expect(panel.getByRole("img")).toHaveCount(3);await expect(panel.locator("figcaption").filter({hasText:"IMG_001.jpg"})).toHaveCount(2);
+  await expect.poll(()=>panel.getByRole("img").evaluateAll(images=>images.every(img=>(img as HTMLImageElement).complete&&(img as HTMLImageElement).naturalWidth>0))).toBe(true);
+  const keys:string[]=[];let lost=false;
+  await page.route(`**/api/v1/projects/${p.id}/sync`,async route=>{keys.push(route.request().headers()["idempotency-key"]);if(!lost){lost=true;const reply=await route.fetch();if(reply.status()!==202)throw Error("Sync failed before lost reply");await route.abort("failed");}else await route.continue();});
+  await panel.getByRole("button",{name:"Sync photos",exact:true}).click();await expect(panel.getByRole("alert")).toContainText("uncertain");
+  await panel.getByRole("button",{name:"Retry sync request",exact:true}).click();await expect(panel.getByRole("status")).toHaveText("Inventory job: Queued");
+  if(keys.length!==2||keys[0]!==keys[1])throw Error("Sync did not reuse its retry key");
+  if((await h.pool.query("SELECT count(*)::int AS n FROM jobs WHERE project_id=$1",[p.id])).rows[0].n!==2)throw Error("Lost sync reply duplicated jobs");
+  await panel.getByRole("button",{name:"Cancel scan",exact:true}).click();await expect(panel.getByRole("status")).toHaveText("Inventory job: Cancelled");await expect(panel.getByRole("img")).toHaveCount(3);
+  await page.unroute(`**/api/v1/projects/${p.id}/sync`);
+  await mkdir("test-results",{recursive:true});
+  for(const width of [360,768,1440]){await page.setViewportSize({width,height:1000});if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))throw Error(`Inventory overflow at ${width}`);await page.screenshot({path:`test-results/inventory-${width}.png`,fullPage:true});}
+  await page.getByRole("combobox",{name:"Language",exact:true}).selectOption("id");await expect(page.getByRole("heading",{name:"Inventaris foto",exact:true})).toBeVisible();
+  const localized=page.getByRole("region",{name:"Inventaris foto",exact:true});
+  await localized.getByRole("button",{name:"Sinkronkan foto",exact:true}).focus();await page.keyboard.press("Enter");
+  await expect(localized.getByRole("status")).toHaveText("Pekerjaan inventaris: Mengantre");
+  await localized.getByRole("button",{name:"Batalkan pemindaian",exact:true}).focus();await page.keyboard.press("Enter");
+  await expect(localized.getByRole("status")).toHaveText("Pekerjaan inventaris: Dibatalkan");
+  const mediaPath=new URL(await localized.getByRole("img").first().getAttribute("src")??"",h.base).pathname;
+  await page.route(`**${mediaPath}`,route=>route.fulfill({status:503,contentType:"application/json",body:JSON.stringify({error:{code:"SOURCE_UNAVAILABLE"}})}));
+  await page.reload();
+  await expect(page.getByText("Preview unavailable. Refresh or sync to recheck the source.",{exact:true})).toBeVisible();
+  await page.getByRole("combobox",{name:"Language",exact:true}).selectOption("id");
+  await expect(page.getByText("Pratinjau tidak tersedia. Segarkan atau sinkronkan untuk memeriksa sumber.",{exact:true})).toBeVisible();
+  await expect(page.getByRole("region",{name:"Inventaris foto",exact:true}).getByRole("img")).toHaveCount(2);
+  if(errors.length)throw Error("Browser runtime errors");
+  console.log("PASS: actual worker process -> isolated PostgreSQL -> protected previews in Chromium; duplicate names, explicit synthetic label, lost sync reply retry, cancellation, ID/EN and 360/768/1440 layouts.");
+}finally{worker?.kill();await browser.close();await h.close();}

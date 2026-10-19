@@ -28,7 +28,7 @@ test("A01 liveness/readiness, repeat and concurrent checksummed PostgreSQL migra
   await Promise.all([h.migrate(), h.migrate()]); await h.migrate();
   const result = await (await status(await fetch(`${h.base}/health/ready`), 200)).json();
   assert.equal(result.data.worker, "not_running");
-  assert.equal((await h.pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n, 4);
+  assert.equal((await h.pool.query("SELECT count(*)::int AS n FROM schema_migrations")).rows[0].n, 6);
   const worker = spawn(process.execPath,["--import","tsx","src/worker/main.ts"],{env:process.env,windowsHide:true,stdio:"ignore"});
   try {
     let running=false;
