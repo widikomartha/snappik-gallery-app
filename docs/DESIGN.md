@@ -43,6 +43,8 @@
 
 Every data-driven view needs applicable loading, empty, saved, stale/partial, validation, permission expired, server unavailable and retry states. Preserve form data after recoverable error. A server-committed project is not marked failed merely because navigation to detail broke. Wrong gallery password gets generic throttled feedback. If a source photo disappears, display it as unavailable in the draft instead of silently clearing it; allow explicit replacement/removal.
 
+The local EPIC-02 owner flow labels the source as awaiting EPIC-03 access validation/indexing. Share-link copying explains that the client gallery belongs to EPIC-04. Create failures with uncertain outcomes hold the original request/key in memory and freeze fields for an identical retry; the UI warns owners to check the project list before starting another create. Browser reload does not persist passwords or the held form; manual project-list review remains necessary after closing that page. Revision conflicts preserve the form and require explicit reload of saved project data. Read views refresh every 15 seconds while visible, back off when hidden or failing, and show their last successful refresh time; edit forms never poll over unsaved entries. Deadline inputs are explicitly labeled UTC; detail/dashboard deadlines use the studio's timezone. Archive/restore/rotation explain their impact in native confirmation dialogs.
+
 ## Design system (pilot defaults)
 
 | Token | Light | Dark |

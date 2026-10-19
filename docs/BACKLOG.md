@@ -1,6 +1,6 @@
 # Implementation backlog — SIX epics only
 
-**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; all other epics remain `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
+**Status:** EPIC-01 is `In progress` with a verified local slice and open D-01 gate; EPIC-02 is `Done` for its local project-lifecycle scope; EPIC-03–06 remain `Not verified in target checkout`. **No microtask registry.** A coding agent reports completion against these **six** user-visible outcomes. Historical work from an existing Snappik clone is not automatically accepted as current proof.
 
 ## At a glance
 
@@ -38,6 +38,8 @@
 **Evidence:** build/typecheck, isolated PostgreSQL race tests, real HTTP auth/onboarding tests, browser login/logout/setup, provider/HTTPS/recovery tests for deployment mode. Capture exact commands and environment only once in implementation evidence, not copied across docs.
 
 ## EPIC-02 — Studio & Project Management
+
+**Status: Done (local project lifecycle).** A01–A05 verified through PostgreSQL, authenticated production-build HTTP and Chromium; see [EPIC-02 evidence](EPIC-02-EVIDENCE.md). Sources remain explicitly pending provider validation/indexing until EPIC-03; client routes and production release are not claimed.
 
 **Outcome:** owner can create a real DB-backed project, configure selection/download workflows, see inventory status, search/list, archive and restore under correct quotas.
 

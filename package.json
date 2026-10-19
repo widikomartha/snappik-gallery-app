@@ -19,8 +19,9 @@
     "mail:local": "tsx --env-file=.env.local scripts/mail-local.ts",
     "worker": "tsx --env-file=.env.local src/worker/main.ts",
     "test": "tsx --test tests/validation.test.ts",
-    "test:db": "tsx --test --test-concurrency=1 tests/integration.test.ts",
-    "test:browser": "tsx scripts/test-browser.ts"
+    "test:db": "tsx --test --test-concurrency=1 tests/integration.test.ts tests/projects.test.ts",
+    "test:browser": "tsx scripts/test-browser.ts",
+    "test:projects:browser": "tsx scripts/test-projects-browser.ts"
   },
   "dependencies": {
     "@better-auth/core": "1.7.11",

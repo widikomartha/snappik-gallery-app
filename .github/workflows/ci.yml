@@ -1,4 +1,4 @@
-name: Foundation checks
+name: Studio checks
 on: [push, pull_request]
 permissions:
   contents: read
@@ -22,4 +22,5 @@ jobs:
       - run: npm run test:db
       - run: npx playwright install chromium
       - run: npm run test:browser
+      - run: npm run test:projects:browser
       - run: pwsh -NoProfile -File docs/tools/validate-docs.ps1

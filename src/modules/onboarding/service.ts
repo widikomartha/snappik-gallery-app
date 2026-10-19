@@ -3,6 +3,8 @@ import { transaction } from "../../db/pool";
 import { identity, lockIdentity } from "../auth/principal";
 import { body, json, origin, Problem } from "../http";
 import { initialDefaults, profile, settingsPatch, studioPatch } from "./validation";
+import { projectRoutes } from "../projects/service";
+import { entitlement } from "../entitlement";
 
 async function owner(client: PoolClient, subject: string) {
   return (await client.query(`SELECT u.id AS user_id,s.* FROM users u JOIN studio_members m ON m.user_id=u.id JOIN studios s ON s.id=m.studio_id WHERE u.auth_provider='better-auth-local' AND u.auth_subject=$1 FOR UPDATE OF s`, [subject])).rows[0];
@@ -10,13 +12,6 @@ async function owner(client: PoolClient, subject: string) {
 function active(studio: Record<string, unknown> | undefined) {
   if (!studio) throw new Problem(403, "SETUP_REQUIRED", "Complete studio setup first.");
   if (studio.suspended_at) throw new Problem(403, "STUDIO_SUSPENDED", "Studio access is suspended.");
-}
-async function entitlement(client: PoolClient, studioId: string) {
-  const grants = (await client.query(`SELECT source,starts_at,ends_at,project_limit,revoked_at,
-    (revoked_at IS NULL AND starts_at<=clock_timestamp() AND ends_at>clock_timestamp()) AS active
-    FROM entitlement_grants WHERE studio_id=$1 ORDER BY starts_at,id`, [studioId])).rows;
-  const applicable = grants.filter(g => g.active);
-  return { status: applicable.length ? "active" : "expired", project_limit: Math.max(0, ...applicable.map(g => g.project_limit)), active_project_usage: 0, grants };
 }
 async function settings(client: PoolClient, studioId: string) {
   return (await client.query("SELECT locale,timezone,revision,defaults_version,defaults FROM studio_settings WHERE studio_id=$1", [studioId])).rows[0] ?? null;
@@ -59,6 +54,7 @@ export async function ownerHandler(request: Request) {
         return json({ studio: studioDTO(studio), settings: await settings(client, studio.id), entitlement: await entitlement(client, studio.id) }, completed ? 200 : 201);
       }
       active(studio);
+      if (path === "projects" || path.startsWith("projects/") || path === "dashboard" || path.startsWith("jobs/")) return projectRoutes(client, studio, request, value);
       if (request.method === "GET" && path === "entitlement") return json(await entitlement(client, studio.id));
       if (request.method === "GET" && path === "studio/settings") return json(await settings(client, studio.id));
       if (request.method === "PATCH" && ["studio", "studio/settings"].includes(path)) {

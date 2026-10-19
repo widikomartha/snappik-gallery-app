@@ -77,6 +77,8 @@ Next useful slice: ...
 
 Keep run logs outside `PROJECT_STATE.md` and link them from PR/issue/CI or a single bounded evidence artifact. When result uncertain, report `Not run` or `Blocked`, not `Passed`.
 
+Current local EPIC-02 assertions and exact verification commands are recorded once in [EPIC-02 evidence](EPIC-02-EVIDENCE.md). Gallery revocation is verified through the actual shared PostgreSQL grant-policy repository with synthetic stored grants; public client access/issuance routes remain EPIC-04 work. Ready/failed inventory projections are explicitly seeded test data, never provider scan evidence.
+
 ## Documentation validator limitations
 
 `docs/tools/validate-docs.ps1` checks Markdown links, fenced JSON, epic links and common mandatory docs. It **cannot** prove requirements are semantically consistent, API implementation matches docs, secrets are absent, backend behavior works or release readiness. Review those separately, especially after any change to source provider, schema, access rules or limits.

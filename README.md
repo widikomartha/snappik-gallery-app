@@ -1,6 +1,6 @@
 # Snappik Studio
 
-Fresh-build TypeScript application for the six-epic photography studio MVP. EPIC-01 provides a **local-only** owner workspace with Better Auth email/password verification, authenticator MFA and backup codes, password recovery, PostgreSQL studio onboarding/settings/trial, health checks and a foundation worker. Project, Drive, gallery and operator flows belong to later epics.
+Fresh-build TypeScript application for the six-epic photography studio MVP. EPIC-01 provides a **local-only** owner workspace with Better Auth email/password verification, authenticator MFA and backup codes, password recovery, PostgreSQL studio onboarding/settings/trial, health checks and a foundation worker. EPIC-02 adds DB-backed projects, workflow configuration, quota-safe archive/restore, link rotation, search/filtering and a dashboard. Drive processing, client gallery and operator flows belong to later epics.
 
 Production authentication remains gated by **D-01** in [decisions](docs/DECISIONS.md). Only loopback HTTP and loopback PostgreSQL are accepted. There is no test-login endpoint, external email service, provider consent or deployment configuration.
 
@@ -41,9 +41,11 @@ Use `/account` to enroll an authenticator. Save backup codes privately before co
 
 `/health/live` checks the web process; `/health/ready` verifies database access and migration checksums, with a separate recent worker-heartbeat state. Web readiness alone does not assert that a worker is running. The foundation worker currently handles heartbeat and expired local-mail retention; no project jobs are claimed.
 
+Use `/app/projects` to create and manage projects. Omitted configuration inherits a saved studio-default snapshot; passwords/deadlines are independent per workflow. The source form accepts a Drive folder ID or a standard folder link, but **only ID syntax is checked locally**. Projects and inventory jobs remain explicitly pending until EPIC-03 validates provider access and scans the folder. No Drive connection or public client gallery exists yet. An uncertain create response offers an identical retry; if that page was closed or reloaded, review the saved project list before creating again. Existing local databases need `npm run db:migrate` after starting the database; migrations are additive and do not reset data.
+
 ## Verification
 
-See the single [EPIC-01 acceptance record](docs/EPIC-01-EVIDENCE.md) for exact commands, tested boundaries and remaining gates. Tests create new isolated PostgreSQL clusters under `.local/tests` and run a real production Next.js HTTP server. They never reset the development database. Test clusters persist privately after shutdown; no automatic database destruction is performed. Browser screenshots contain only synthetic workspace information and empty login forms under ignored `test-results/`.
+See the [EPIC-01 acceptance record](docs/EPIC-01-EVIDENCE.md) and [EPIC-02 acceptance record](docs/EPIC-02-EVIDENCE.md) for exact commands, tested boundaries and remaining gates. Tests create new isolated PostgreSQL clusters under `.local/tests` and run a real production Next.js HTTP server. They never reset the development database. Test clusters persist privately after shutdown; no automatic database destruction is performed. Browser screenshots contain only synthetic workspace information and empty login forms under ignored `test-results/`.
 
 The [Windows CI workflow](.github/workflows/ci.yml) installs from the lockfile and runs validation, build, PostgreSQL/HTTP, Chromium and documentation checks. It is configured, not evidence of a hosted run.
 

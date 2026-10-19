@@ -48,6 +48,12 @@
 
 **Archive/restore/purge:** archive changes access version synchronously; restore verifies owner entitlement/quota and old absolute dates; worker purge after 30 days rechecks archived state under lock before deleting derived assets/allowed records. Do not delete Drive originals.
 
+## Current EPIC-02 schema boundary
+
+`004_projects.sql` adds the project lifecycle tables, both workflow rows (including disabled workflows), one dormant-or-active selection set, scoped photo/item references for quota guards, inventory jobs, creation idempotency and gallery grant version references. Composite foreign keys preserve studio/project scope throughout. The initial job is durable `pending`; the foundation worker does not process it. Changing subfolder detection queues a new revision-deduplicated pending job without removing old inventory metadata.
+
+Project creation snapshots the saved defaults plus their version/revision; later studio defaults do not rewrite that snapshot or project settings. Workflow hashes use the existing Better Auth slow-password implementation and never enter DTOs. Request fingerprints use keyed HMAC over canonical validated input, so passwords are not persisted as plaintext or unkeyed fast hashes. Idempotency replay expires after 24 hours; retained key uniqueness rejects reuse after that window. Archive/rotation advance the project access version; restore retains the advanced version, original workflow deadlines and selection records. No purge, confirmation writer, gallery session issuance or provider inventory writer is delivered by this migration.
+
 ## Migration / release policy
 
 - Prefer `ADD nullable → backfill → verify → enforce NOT NULL/unique` for expansions. Production changes need reviewed migration and backup/compatibility plan, not destructive `down/reset`.
