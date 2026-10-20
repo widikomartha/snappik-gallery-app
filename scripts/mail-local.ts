@@ -2,7 +2,7 @@ import { db } from "../src/db/pool";
 import { unseal } from "../src/modules/auth/mail";
 import { config } from "../src/config";
 
-config();
+if (config().mode !== "local") throw new Error("The private mailbox is available only in local mode.");
 const email = process.argv[2];
 if (!email) throw new Error("Usage: npm run mail:local -- owner@example.test (local messages only)");
 try {

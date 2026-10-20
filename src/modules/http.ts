@@ -11,13 +11,14 @@ export function failure(error: unknown, requestId = randomUUID()) {
   if (!(error instanceof Problem)) console.error(JSON.stringify({ request_id: requestId, code: p.code }));
   return Response.json({ error: { code: p.code, message: p.message, request_id: requestId, ...(p.revision === undefined ? {} : { current_revision: p.revision }) } }, { status: p.status, headers: { "Cache-Control": "no-store", ...(p.status===429?{"Retry-After":"60"}:{}) } });
 }
-export function origin(request: Request) {
+export function origin(request: Request, emailNavigation = false) {
   // Next constructs its internal Request URL from the listening interface.
   // Validate the actual Host and browser Origin against the configured origin.
   if (request.headers.get("host") !== new URL(config().appUrl).host) throw new Problem(403, "ORIGIN_DENIED", "Request origin is not allowed.");
   if (!["GET", "HEAD"].includes(request.method) && request.headers.get("origin") !== config().appUrl) throw new Problem(403, "ORIGIN_DENIED", "Request origin is not allowed.");
   const site = request.headers.get("sec-fetch-site");
-  if (site === "cross-site") throw new Problem(403, "ORIGIN_DENIED", "Request origin is not allowed.");
+  const navigation = emailNavigation && request.method === "GET" && request.headers.get("sec-fetch-mode") === "navigate" && request.headers.get("sec-fetch-dest") === "document";
+  if (site === "cross-site" && !navigation) throw new Problem(403, "ORIGIN_DENIED", "Request origin is not allowed.");
 }
 export async function body(request: Request, maximum = 16384) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new Problem(415, "INVALID_INPUT", "Use JSON.");

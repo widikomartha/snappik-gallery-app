@@ -68,6 +68,8 @@ The additive `007_gallery.sql` stores a bounded rolling access-attempt counter p
 
 ## Migration / release policy
 
+D-01 production authentication reuses migrations 001–009 without new credential or mail tables. The persisted `better-auth-local` value is retained as a legacy provider namespace in both modes: it still identifies the same Better Auth UUIDs, owner membership and revocation triggers. Changing deployment mode never remaps users by email or resets studio/trial data. Production SMTP is transient and does not write `local_mail`. Atomic global/account throttles reuse `rateLimit` with database timestamps and HMAC account keys. A local-to-production test keeps the existing subject, studio and entitlement unchanged; hosted least-privilege and migration proof remain D-01/D-03.
+
 - Prefer `ADD nullable → backfill → verify → enforce NOT NULL/unique` for expansions. Production changes need reviewed migration and backup/compatibility plan, not destructive `down/reset`.
 - Checksummed migrations and advisory locking prevent out-of-order/concurrent duplicate application. SQL and journal commit atomically; failed DDL rolls back.
 - Review web **and** worker compatibility before schema changes. Never roll old workers without lease-fencing support back onto a schema/process that expects fencing.

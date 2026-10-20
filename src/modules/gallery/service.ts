@@ -9,6 +9,7 @@ import { ownerPreview, type OwnerTransaction } from "../inventory/media";
 import { confirm, clientSnapshot } from "./results";
 import { originalDownload } from "./download";
 import { assertOperational } from "../operations/recovery";
+import { config } from "../../config";
 
 type Kind = "main" | "download";
 const unavailable = () => new Problem(404,"GALLERY_UNAVAILABLE","Gallery unavailable.");
@@ -88,8 +89,7 @@ export async function galleryHandler(request:Request) {
       const g=(await c.query(`INSERT INTO gallery_sessions(token_hash,studio_id,project_id,workflow,project_access_version,workflow_access_version,expires_at)
         VALUES($1,$2,$3,$4,$5,$6,LEAST(clock_timestamp()+interval '12 hours',$7::timestamptz)) RETURNING expires_at`,[digest(raw),p.studio_id,p.id,input.workflow,p.access_version,w.access_version,w.expires_at])).rows[0];
       const response=json({workflow:input.workflow,expires_at:g.expires_at});
-      // The approved runtime is HTTP loopback only; hosted mode must use Secure.
-      response.headers.set("Set-Cookie",`${cookieName(input.workflow)}=${raw}; Path=/api/v1/g/${token}; HttpOnly; SameSite=Strict; Max-Age=${Math.max(0,Math.floor((new Date(g.expires_at).getTime()-Date.now())/1000))}${url.protocol==="https:"?"; Secure":""}`);return response;
+      response.headers.set("Set-Cookie",`${cookieName(input.workflow)}=${raw}; Path=/api/v1/g/${token}; HttpOnly; SameSite=Strict; Max-Age=${Math.max(0,Math.floor((new Date(g.expires_at).getTime()-Date.now())/1000))}${config().mode === "production"?"; Secure":""}`);return response;
     });
   }
   if(action?.startsWith("media/")&&request.method==="GET") {

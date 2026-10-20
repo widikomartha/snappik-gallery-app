@@ -5,14 +5,19 @@
 | Field | Actual value |
 |---|---|
 | Repository | Local Git checkout; `origin` configured (not contacted) |
-| Branch + HEAD + changes | `main`, based on `ab375b7`; uncommitted EPIC-06 implementation (inspect Git status) |
-| Verified running features | Local auth/onboarding/settings/trial; projects; fenced inventory/private previews; client grants/gallery/draft; immutable results/reopen/export/download; restricted operator UI/API and diagnostics |
-| Current epic | EPIC-06 — Operations, Security & Pilot Release |
+| Branch + HEAD + changes | `main`, based on `cc14c37`; uncommitted D-01 authentication implementation (inspect Git status) |
+| Verified running features | Local auth/onboarding/settings/trial plus two-process production HTTPS/SMTP auth protocol; projects; inventory/private previews; client gallery/draft/results/download; restricted operator UI/API |
+| Current epic | EPIC-01 — D-01 Authentication production mode |
 | Epic status 01 / 02 / 03 | In progress (D-01) / Done (local lifecycle) / Blocked (provider/hosted proof) |
 | Epic status 04 / 05 / 06 | In progress / Blocked / Blocked |
-| Evidence | [EPIC-06](EPIC-06-EVIDENCE.md), [EPIC-05](EPIC-05-EVIDENCE.md), [EPIC-04](EPIC-04-EVIDENCE.md), [EPIC-03](EPIC-03-EVIDENCE.md) |
+| Evidence | [EPIC-01 / D-01](EPIC-01-EVIDENCE.md); retained [EPIC-06](EPIC-06-EVIDENCE.md), [EPIC-05](EPIC-05-EVIDENCE.md), [EPIC-04](EPIC-04-EVIDENCE.md), [EPIC-03](EPIC-03-EVIDENCE.md) |
+| Single EPIC-01 residual gate | Approved live SMTP/sender and HTTPS target, named key custody, real inbox/hosted proxy/log/DB-role/restart/migration proof |
 | Single EPIC-06 residual gate | Authorized pilot release evidence: D-01..D-04, reconciled retention/recovery, real device and hosted operation/rollback |
-| Next concrete action | Obtain the approved staging/privacy/auth/provider choices, then implement and verify reconciliation/purge and the hosted release gate |
+| Next concrete action | Configure D-01 privately on an approved staging target and verify live delivery, custody and hosted controls; D-02/03/04 release work remains separate |
+
+**D-01 delivered:** owner approved existing Better Auth verified email/password, optional owner TOTP, single-use backup codes, no support bypass and owner-configured SMTP on 20 October 2026. Explicit production mode requires HTTPS, generated shared secret, invitation allowlist and authenticated verified-TLS SMTP. Secure owner/gallery cookies work behind an HTTP upstream; external-inbox navigations work while Host/Origin/callback denials remain enforced. Shared atomic global/account throttles ignore forwarded IPs and survive process restarts. SMTP acceptance occurs after provider commit/lock release; rejection/uncertainty returns 503 with recoverable registration retry. Existing UUID/membership/trial and revocation triggers remain unchanged; no new migration. Production does not enable local mail/CLI or local Drive adapters.
+
+**Latest executed evidence:** typecheck/build, 4 unit tests, 14 foundation/project PostgreSQL/HTTP groups, 6 production auth groups (two web processes, HTTPS/TLS SMTP/Chromium), 6 gallery groups, 4 operator/recovery groups and the existing local Chromium auth journey passed. Production-dependency audit reported zero vulnerabilities; docs/diff checks passed. These are synthetic local protocol tests; real inbox, hosted controls and key custody remain the single D-01 gate. EPIC-01 stays `In progress`. No real account, deployment, managed development DB migration or commit occurred.
 
 **EPIC-06 delivered locally:** `/ops` and separate scoped/global permissions require actual TOTP proof within five minutes in the current provider session. Restricted diagnostics omit gallery content and sensitive support text. Reasoned grants/suspend/reactivate use atomic immutable audit, durable throttling and session-scoped idempotency. Suspension permanently revokes old gallery sessions, including after reactivation. Operator UI preserves an unknown request for identical retry. Metrics expose safe queue/lease/advisory alerts and web/worker RSS/pool counters; retention remains report-only.
 
@@ -22,4 +27,4 @@ A separately keyed AES-GCM logical backup includes private preview objects. Real
 
 **Retained outcomes:** EPIC-05 confirmation/history/reopen/export and independent bounded original delivery remain locally verified, with real-provider/hosted A05 proof pending D-02/D-03. EPIC-04 gallery/draft/conflict recovery remains locally verified with physical-phone acceptance outstanding. EPIC-03's separately approved public-only local source/cache has prior evidence; default provider mode remains disabled and live edge cases/key policy/hosted constraints remain open. No new live-provider request was performed for EPIC-06.
 
-**Boundaries:** no destructive purge, recovery reopening, real account/operator permission changes, external alert delivery or deployment. D-01 auth, remaining D-02 provider proof, D-03 hosting/custody and D-04 privacy remain open. Runtime pins: Node 24.18.0/npm 11.16.0, Next.js 16.4.2, React 19.2.7, Better Auth 1.7.11, PostgreSQL 18.4, Sharp 0.35.5. No commit or external provisioning occurred.
+**Boundaries:** no destructive purge, recovery reopening, real account/operator permission changes, external alert delivery or deployment. D-01 policy/adapter is implemented with operational acceptance open; remaining D-02 provider proof, D-03 hosting/custody and D-04 privacy remain open. Runtime pins: Node 24.18.0/npm 11.16.0, Next.js 16.4.2, React 19.2.7, Better Auth 1.7.11, PostgreSQL 18.4, Sharp 0.35.5; SMTP Nodemailer 10.1.7. No commit or external provisioning occurred.

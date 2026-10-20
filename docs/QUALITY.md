@@ -63,6 +63,8 @@ pwsh -NoProfile -File docs/tools/validate-docs.ps1
 
 Provider auth, recovery and browser commands may have their own dedicated test scripts; inspect `package.json` and execute only relevant suites. CI passing is evidence **only for the commands actually executed**, on that exact commit/environment.
 
+`npm run test:auth:production` runs actual production-mode auth through locally trusted HTTPS termination, two independent Next.js processes sharing PostgreSQL, authenticated TLS SMTP and Chromium. It checks existing local identity/studio continuity, Secure owner/gallery cookies, invitation removal, callback/Origin/Host denial, email-navigation acceptance, SMTP reject/retry, STARTTLS/downgrade/certificate rejection, concurrent shared/account throttles with spoofed IPs, process restart, single-use reset/backup races and durable revocation/MFA preservation. Logs are checked for SMTP credentials and delivered links. Generated local certificates and synthetic SMTP recipients prove protocol behavior only; real sender/inbox, hosted TLS/proxy/logs, key custody and DB-role evidence remain required under D-01/D-03. Exact run results live in [EPIC-01 evidence](EPIC-01-EVIDENCE.md).
+
 ## Completion record (short template, not a growing history)
 
 ```text

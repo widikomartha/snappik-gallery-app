@@ -5,6 +5,8 @@ import { withDeliveries } from "./mail";
 import { body, failure, origin, Problem } from "../http";
 import { recordOperatorMfa } from "../operations/mfa";
 import { assertOperational } from "../operations/recovery";
+import { config, ownerAllowed } from "../../config";
+import { accountThrottle } from "./throttle";
 
 const password = z.string().min(1).max(128);
 const email = z.string().email().max(254);
@@ -25,41 +27,71 @@ const schemas: Record<string, z.ZodType> = {
 };
 export async function authHandler(request: Request) {
   try {
-    origin(request);
+    let suppliedEmail: string | undefined;
     const path = new URL(request.url).pathname.replace(/^\/api\/auth\//, "");
+    origin(request, path === "verify-email" || /^reset-password\/[A-Za-z0-9_-]{1,200}$/.test(path));
     if (request.method === "POST") {
       if (!schemas[path]) throw new Problem(404, "NOT_FOUND", "Not found.");
       const value = await body(request);
       if (!schemas[path].safeParse(value).success) throw new Problem(422, "INVALID_INPUT", "Check the supplied fields.");
+      // Restrict credential-bearing redirects to this application, including
+      // URL credentials and protocol-relative URLs. Defaults land on real UI.
+      const fields = value as Record<string, unknown>;
+      if (typeof fields.email === "string") suppliedEmail = fields.email;
+      if (["sign-up/email", "sign-in/email", "send-verification-email"].includes(path)) fields.callbackURL = callback(fields.callbackURL, "/login");
+      if (path === "request-password-reset") fields.redirectTo = callback(fields.redirectTo, "/recover");
       request = new Request(request.url, { method: "POST", headers: request.headers, body: JSON.stringify(value) });
     } else if (request.method !== "GET" || (! ["get-session", "verify-email"].includes(path) && !/^reset-password\/[A-Za-z0-9_-]{1,200}$/.test(path))) throw new Problem(404, "NOT_FOUND", "Not found.");
-    // Deliberately conservative local policy: serialize provider requests across processes.
-    // Prevent password-check/session-create and factor/reset races while D-01 is open.
-    const guard = await authGuard().connect();
-    try {
-      await guard.query("SELECT pg_advisory_lock(71002)");
-      await assertOperational(guard);
-      const before = path === "sign-out" ? await auth().api.getSession({ headers: request.headers, query: { disableCookieCache: true } }) : null;
-      if (path === "sign-out") {
-        if (before) await guard.query("DELETE FROM session WHERE id=$1", [before.session.id]);
-        // Revocation uncertainty is failure even when the library would swallow a delete error.
-        await guard.query("SELECT 1");
-      }
-      const execute = async () => {
-        const response = await withDeliveries(() => auth().handler(request));
-        if (response.status >= 500) throw new Error("Auth storage unavailable");
-        if (path === "two-factor/verify-totp" && response.ok) await recordOperatorMfa(request,response);
-        return response;
-      };
-      const response = path.startsWith("two-factor/") || path === "change-password"
-        ? await (await auth().$context).adapter.transaction(() => execute())
-        : await execute();
-      if (path === "sign-out" && before && (await guard.query("SELECT 1 FROM session WHERE id=$1", [before.session.id])).rowCount) throw new Error("Logout not durable");
-      response.headers.set("Cache-Control", "no-store");
-      return response;
-    } finally {
-      try { await guard.query("SELECT pg_advisory_unlock(71002)"); }
-      finally { guard.release(); }
+    if (request.method === "GET") {
+      const url = new URL(request.url);
+      if (url.searchParams.has("callbackURL")) callback(url.searchParams.get("callbackURL"), path === "verify-email" ? "/login" : "/recover");
     }
+    return await withDeliveries(() => guardedAuth(request, path, suppliedEmail));
   } catch (e) { return failure(e); }
+}
+
+async function guardedAuth(request: Request, path: string, suppliedEmail?: string) {
+  // A bounded pilot serializes credential/factor transitions across replicas.
+  // Delivery runs after this lock and provider transactions have been released.
+  const guard = await authGuard().connect();
+  let locked = false;
+  try {
+    await accountThrottle(guard, request, path, suppliedEmail);
+    await guard.query("SELECT pg_advisory_lock(71002)"); locked = true;
+    await assertOperational(guard);
+    if (suppliedEmail && !ownerAllowed(suppliedEmail)) {
+      if (path === "sign-in/email") throw new Problem(401, "INVALID_EMAIL_OR_PASSWORD", "Invalid email or password.");
+      return Response.json({ status: true }, { headers: { "Cache-Control": "no-store" } });
+    }
+    const before = path === "sign-out" ? await auth().api.getSession({ headers: request.headers, query: { disableCookieCache: true } }) : null;
+    if (path === "sign-out" && before) await guard.query("DELETE FROM session WHERE id=$1", [before.session.id]);
+    const execute = async () => {
+      const response = await auth().handler(request);
+      if (response.status >= 500) throw new Error("Auth storage unavailable");
+      if (path === "two-factor/verify-totp" && response.ok) await recordOperatorMfa(request,response);
+      return response;
+    };
+    const response = path.startsWith("two-factor/") || path === "change-password"
+      ? await (await auth().$context).adapter.transaction(() => execute())
+      : await execute();
+    // A lost guard connection cannot acknowledge credentials after losing its
+    // serialization lock. Durable logout must survive swallowed provider errors.
+    await guard.query("SELECT 1");
+    if (path === "sign-out" && before && (await guard.query("SELECT 1 FROM session WHERE id=$1", [before.session.id])).rowCount) throw new Error("Logout not durable");
+    response.headers.set("Cache-Control", "no-store");
+    return response;
+  } finally {
+    try { if (locked) await guard.query("SELECT pg_advisory_unlock(71002)"); }
+    finally { guard.release(); }
+  }
+}
+
+function callback(value: unknown, fallback: string) {
+  const base = config().appUrl;
+  if (value === undefined) return `${base}${fallback}`;
+  try {
+    const url = new URL(String(value), base);
+    if (url.origin === base && !url.username && !url.password && !url.hash && !url.search && ["/", "/login", "/recover"].includes(url.pathname)) return url.href;
+  } catch {}
+  throw new Problem(403, "ORIGIN_DENIED", "Request origin is not allowed.");
 }

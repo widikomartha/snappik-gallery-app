@@ -25,6 +25,7 @@ jobs:
       - run: npm run test:results
       - run: npm run test:operations
       - run: npx playwright install chromium
+      - run: npm run test:auth:production
       - run: npm run test:browser
       - run: npm run test:projects:browser
       - run: npm run test:inventory:browser

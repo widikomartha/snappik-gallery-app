@@ -16,8 +16,15 @@ async function api(path: string, method = "GET", value?: unknown) {
   if (!response.ok) throw new ApiError(response.status, result.error?.code ?? result.code ?? "UNKNOWN");
   return path.startsWith("/api/v1") ? result.data : result;
 }
-export function Foundation({ screen }: { screen: string }) {
-  const [lang, setLang] = useState<"id" | "en">("id"); const t = copy[lang];
+export function Foundation({ screen, production = false }: { screen: string; production?: boolean }) {
+  const [lang, setLang] = useState<"id" | "en">("id");
+  const t = { ...copy[lang], ...(production ? lang === "en" ? {
+    local: "Private studio access", verificationSent: "If your email is invited, check your inbox for a verification link, then sign in.",
+    recoverySub: "Request an email link to reset your password.", recoverySent: "If the account is eligible, a recovery link has been submitted for email delivery. Check your inbox and spam folder.",
+  } : {
+    local: "Akses studio privat", verificationSent: "Jika email Anda diundang, periksa kotak masuk untuk tautan verifikasi, lalu masuk.",
+    recoverySub: "Minta tautan email untuk mengatur ulang kata sandi.", recoverySent: "Jika akun memenuhi syarat, tautan pemulihan telah diajukan untuk pengiriman email. Periksa kotak masuk dan folder spam.",
+  } : {}) };
   const [me, setMe] = useState<Me | null>(null); const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false); const [message, setMessage] = useState(""); const [error, setError] = useState("");
   const [register, setRegister] = useState(false); const [challenge, setChallenge] = useState(false); const [backup, setBackup] = useState(false);

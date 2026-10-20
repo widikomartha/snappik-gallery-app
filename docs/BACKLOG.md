@@ -19,7 +19,7 @@
 
 ## EPIC-01 — Foundation & Authentication
 
-**Status: In progress.** Fresh-build local foundation/authentication implemented; see the [local A01–A05 acceptance record](EPIC-01-EVIDENCE.md). Production acceptance remains blocked by D-01; no production readiness is claimed.
+**Status: In progress.** Local foundation plus the owner-approved Better Auth email/password, optional TOTP/backup-only recovery and TLS SMTP production adapter are implemented. Two-process HTTPS/PostgreSQL/SMTP/Chromium protocol checks cover shared throttles, continuity and revocation; see the [A01–A05 acceptance record](EPIC-01-EVIDENCE.md). The single residual D-01 gate is approved live SMTP/hosted configuration, key custody and actual inbox/host/DB-role proof; no production readiness is claimed.
 
 **Outcome:** a verified owner can login, create/repair exactly one studio, see current entitlement, logout and recover access without losing acknowledged studio data.
 

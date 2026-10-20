@@ -22,6 +22,7 @@
     "drive:verify-live": "tsx --env-file=.env.local scripts/verify-drive-live.ts",
     "test": "tsx --test tests/validation.test.ts",
     "test:db": "tsx --test --test-concurrency=1 tests/integration.test.ts tests/projects.test.ts",
+    "test:auth:production": "tsx --test --test-concurrency=1 tests/production-auth.test.ts",
     "test:browser": "tsx scripts/test-browser.ts",
     "test:projects:browser": "tsx scripts/test-projects-browser.ts",
     "test:inventory": "tsx --test --test-concurrency=1 tests/inventory.test.ts tests/public-drive.test.ts tests/drive-config.test.ts",
@@ -42,20 +43,25 @@
     "better-auth": "1.7.11",
     "kysely": "0.29.7",
     "next": "16.4.2",
+    "nodemailer": "10.1.7",
     "pg": "8.23.1",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-    "zod": "4.6.7",
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",
     "@types/node": "24.19.2",
+    "@types/nodemailer": "8.0.2",
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/smtp-server": "3.5.13",
     "embedded-postgres": "18.4.0-beta.17",
     "otpauth": "9.5.2",
+    "selfsigned": "5.5.0",
+    "smtp-server": "3.20.2",
     "tsx": "4.23.15",
     "typescript": "5.9.3"
   }

@@ -9,10 +9,13 @@ import { authDatabase } from "./database";
 export function makeAuth() {
   const env = config();
   return betterAuth({
-    appName: "Snappik Local", baseURL: env.appUrl, secret: env.secret,
+    appName: "Snappik", baseURL: env.appUrl, secret: env.secret,
     database: authDatabase(db()), trustedOrigins: [env.appUrl],
     logger: { disabled: true },
-    advanced: { database: { generateId: "uuid" }, disableIPTracking: true },
+    advanced: { database: { generateId: "uuid" }, useSecureCookies: env.mode === "production",
+      // No hosting/proxy IP header is trusted. A durable shared ceiling applies;
+      // the HTTP adapter adds a separate keyed per-account limit.
+      ipAddress: { ipAddressHeaders: [] }, defaultCookieAttributes: { httpOnly: true, sameSite: "lax" } },
     emailAndPassword: {
       enabled: true, minPasswordLength: 12, maxPasswordLength: 128,
       requireEmailVerification: true, revokeSessionsOnPasswordReset: true,
@@ -33,7 +36,7 @@ export function makeAuth() {
     session: { expiresIn: 43200, updateAge: 3600, cookieCache: { enabled: false } },
     rateLimit: { enabled: true, storage: "database", window: 60, max: 60,
       customRules: { "/sign-in/email": { window: 60, max: 10 }, "/sign-up/email": { window: 60, max: 5 }, "/request-password-reset": { window: 60, max: 5 } } },
-    plugins: [twoFactor({ issuer: "Snappik Local", backupCodeOptions: { amount: 10 } }), {
+    plugins: [twoFactor({ issuer: "Snappik", backupCodeOptions: { amount: 10 } }), {
       id: "operator-proof",
       schema: { operatorMfaProof: { modelName: "operator_mfa_proofs", fields: {
         sessionId: { type: "string", required: true, fieldName: "session_id", unique: true },
